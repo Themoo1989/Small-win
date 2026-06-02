@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>⭐ Small Win Tracker</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;600;700;800&display=swap');
+:root{--p:#7C3AED;--pl:#A78BFA;--ac:#F59E0B;--ac2:#EC4899;--bg:#FAF5FF;--card:#FFF;--txt:#1E1B4B;--muted:#9CA3AF;--green:#10B981;--gl:#D1FAE5;--r:16px;}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Sarabun',sans-serif;background:var(--bg);color:var(--txt);min-height:100vh;padding-bottom:80px;}
+
+/* MODALS */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:1000;padding:16px;}
+.modal-box{background:#fff;border-radius:24px;padding:28px 24px;width:100%;max-width:340px;text-align:center;animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);}
+.modal-box h2{font-size:22px;margin-bottom:6px;}
+.modal-box p{color:var(--muted);font-size:14px;margin-bottom:20px;}
+.inp{width:100%;border:2px solid #E9D5FF;border-radius:12px;padding:12px 16px;font-size:16px;font-family:'Sarabun',sans-serif;outline:none;transition:border .2s;margin-bottom:12px;}
+.inp:focus{border-color:var(--p);}
+.btn{background:linear-gradient(135deg,#7C3AED,#EC4899);color:#fff;border:none;border-radius:12px;padding:13px 24px;font-size:15px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;width:100%;margin-top:4px;transition:transform .15s;}
+.btn:active{transform:scale(.97);}
+.btn-outline{background:none;border:2px solid var(--p);color:var(--p);border-radius:12px;padding:10px 20px;font-size:14px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;transition:all .2s;}
+.btn-outline:hover{background:var(--p);color:#fff;}
+
+/* HEADER */
+.header{background:linear-gradient(135deg,#7C3AED 0%,#EC4899 100%);padding:20px 16px 56px;position:relative;overflow:hidden;}
+.header::before,.header::after{content:'';position:absolute;border-radius:50%;background:rgba(255,255,255,.1);}
+.header::before{top:-40px;right:-40px;width:160px;height:160px;}
+.header::after{bottom:-20px;left:20px;width:100px;height:100px;}
+.h-name{color:rgba(255,255,255,.85);font-size:13px;margin-bottom:2px;}
+.h-title{color:#fff;font-size:22px;font-weight:800;}
+.h-date{color:rgba(255,255,255,.75);font-size:12px;margin-top:4px;}
+.h-stats{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:1;}
+.stat-pill{background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.3);border-radius:20px;padding:5px 12px;color:#fff;font-size:13px;font-weight:600;backdrop-filter:blur(4px);}
+
+/* TABS */
+.tabs{display:flex;background:#fff;margin:-24px 14px 0;border-radius:14px;box-shadow:0 4px 20px rgba(124,58,237,.12);position:relative;z-index:10;overflow:hidden;}
+.tab-btn{flex:1;padding:12px 4px;border:none;background:transparent;cursor:pointer;font-family:'Sarabun',sans-serif;font-size:11px;font-weight:700;color:var(--muted);transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:2px;}
+.tab-btn .ti{font-size:18px;}
+.tab-btn.active{color:var(--p);background:#F5F0FF;}
+
+.content{padding:14px;}
+.tab-pane{display:none;}
+.tab-pane.active{display:block;}
+.sec-title{font-size:16px;font-weight:800;margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+
+/* CARDS */
+.card{background:#fff;border-radius:14px;padding:14px 16px;box-shadow:0 2px 8px rgba(0,0,0,.06);margin-bottom:12px;}
+
+/* PROGRESS */
+.prog-label{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;font-size:14px;font-weight:600;}
+.prog-num{color:var(--p);font-size:18px;font-weight:800;}
+.prog-bg{background:#F3F4F6;border-radius:100px;height:10px;overflow:hidden;}
+.prog-fill{height:100%;background:linear-gradient(90deg,#7C3AED,#EC4899);border-radius:100px;transition:width .5s cubic-bezier(.4,0,.2,1);}
+
+/* CHECKLIST */
+.checklist{display:flex;flex-direction:column;gap:9px;}
+.ci{background:#fff;border-radius:13px;padding:13px 14px;display:flex;align-items:center;gap:11px;box-shadow:0 2px 8px rgba(0,0,0,.06);cursor:pointer;transition:all .2s;border:2px solid transparent;user-select:none;-webkit-tap-highlight-color:transparent;}
+.ci:active{transform:scale(.98);}
+.ci.done{background:var(--gl);border-color:var(--green);}
+.cbox{width:26px;height:26px;border-radius:7px;border:2px solid #D1D5DB;display:flex;align-items:center;justify-content:center;flex-shrink:0;background:#fff;font-size:15px;transition:all .2s;}
+.ci.done .cbox{background:var(--green);border-color:var(--green);color:#fff;}
+.clabel{flex:1;}
+.lmain{font-weight:700;font-size:14px;}
+.lsub{font-size:11px;color:var(--muted);margin-top:1px;}
+.ci.done .lmain{text-decoration:line-through;color:var(--green);}
+
+/* STREAK */
+.streak-card{background:linear-gradient(135deg,#FFF7ED,#FEF3C7);border:2px solid #FCD34D;border-radius:13px;padding:13px 14px;margin-bottom:12px;display:flex;align-items:center;gap:11px;}
+.sf{font-size:34px;}
+.si h4{font-size:15px;font-weight:800;color:#92400E;}
+.si p{font-size:11px;color:#B45309;}
+
+/* LEVEL */
+.lv-card{border-radius:13px;padding:13px 14px;margin-bottom:12px;display:flex;align-items:center;gap:11px;}
+.lv-icon{font-size:34px;}
+.lv-info h4{font-size:15px;font-weight:800;}
+.lv-info p{font-size:11px;color:var(--muted);}
+
+/* QUOTE */
+.quote-card{background:#fff;border-left:4px solid var(--p);border-radius:11px;padding:12px 14px;margin-bottom:12px;box-shadow:0 2px 8px rgba(0,0,0,.05);}
+.qt{font-size:13px;font-style:italic;line-height:1.6;}
+.ql{font-size:10px;color:var(--muted);margin-top:5px;}
+
+/* STAR BANNER */
+.star-banner{background:linear-gradient(135deg,#F59E0B,#EF4444);border-radius:14px;padding:14px;margin-bottom:12px;color:#fff;text-align:center;display:none;animation:popIn .5s cubic-bezier(.175,.885,.32,1.275);}
+.star-banner.show{display:block;}
+.big-star{font-size:44px;animation:spin 2s linear infinite;display:inline-block;}
+.star-banner h3{font-size:19px;font-weight:800;}
+.star-banner p{font-size:13px;opacity:.9;margin-top:3px;}
+
+/* CALENDAR */
+.month-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.mnav{background:#fff;border:2px solid #E9D5FF;border-radius:9px;padding:5px 12px;cursor:pointer;font-size:17px;font-family:'Sarabun',sans-serif;}
+.mtitle{font-size:15px;font-weight:800;color:var(--p);}
+.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:14px;}
+.cdow{text-align:center;font-size:10px;font-weight:700;color:var(--muted);padding:3px 0;}
+.cday{aspect-ratio:1;border-radius:9px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;font-weight:600;background:#F9FAFB;}
+.cday.empty{background:transparent;}
+.cday.today{border:2px solid var(--p);color:var(--p);font-weight:800;}
+.cday.starred{background:linear-gradient(135deg,#FEF3C7,#FCD34D);}
+.cday .dstar{font-size:14px;line-height:1;}
+.cday .dnum{font-size:10px;color:var(--muted);}
+.cday.starred .dnum{color:#92400E;font-weight:700;}
+
+/* STATS GRID */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-bottom:12px;}
+.sb{background:#fff;border-radius:13px;padding:13px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.sb .sn{font-size:26px;font-weight:800;color:var(--p);}
+.sb .sl{font-size:11px;color:var(--muted);margin-top:1px;}
+
+/* STICKERS */
+.sticker-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;}
+.ss{aspect-ratio:1;background:#F3F4F6;border-radius:13px;display:flex;align-items:center;justify-content:center;font-size:30px;border:2px dashed #E5E7EB;position:relative;}
+.ss.earned{background:linear-gradient(135deg,#EDE9FE,#FCE7F3);border:2px solid var(--pl);animation:popIn .4s cubic-bezier(.175,.885,.32,1.275);}
+.ss.locked{opacity:.4;}
+.ss .sm{position:absolute;bottom:3px;font-size:8px;color:var(--muted);font-weight:700;}
+
+/* LEADERBOARD */
+.lb-row{display:flex;align-items:center;gap:12px;background:#fff;border-radius:13px;padding:12px 14px;margin-bottom:8px;box-shadow:0 2px 8px rgba(0,0,0,.06);}
+.lb-rank{font-size:20px;width:32px;text-align:center;flex-shrink:0;}
+.lb-info{flex:1;}
+.lb-name{font-weight:800;font-size:14px;}
+.lb-meta{font-size:11px;color:var(--muted);}
+.lb-stars{font-size:18px;font-weight:800;color:var(--ac);}
+.lb-streak{font-size:11px;color:#EF4444;font-weight:700;}
+.lb-me{border:2px solid var(--p);}
+.lb-empty{text-align:center;color:var(--muted);font-size:14px;padding:24px 0;}
+
+/* SYNC BTN */
+.sync-row{display:flex;gap:8px;margin-bottom:12px;align-items:center;}
+.sync-status{font-size:12px;color:var(--muted);flex:1;}
+.sync-status.ok{color:var(--green);}
+.sync-status.err{color:#EF4444;}
+.btn-sm{padding:8px 16px;font-size:13px;border-radius:10px;border:2px solid var(--p);background:none;color:var(--p);cursor:pointer;font-family:'Sarabun',sans-serif;font-weight:700;white-space:nowrap;}
+.btn-sm.active{background:var(--p);color:#fff;}
+
+/* SETTINGS */
+.settings-form{display:flex;flex-direction:column;gap:8px;}
+.settings-form label{font-size:13px;font-weight:700;color:var(--txt);}
+.settings-form small{font-size:11px;color:var(--muted);}
+
+/* POPUP */
+.popup-ov{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:999;opacity:0;pointer-events:none;transition:opacity .3s;padding:16px;}
+.popup-ov.show{opacity:1;pointer-events:all;}
+.popup-box{background:#fff;border-radius:24px;padding:28px 20px;text-align:center;max-width:310px;width:100%;transform:scale(.8);transition:transform .4s cubic-bezier(.175,.885,.32,1.275);}
+.popup-ov.show .popup-box{transform:scale(1);}
+.pop-icon{font-size:72px;display:block;margin-bottom:10px;animation:bounce .6s ease infinite alternate;}
+.pop-title{font-size:21px;font-weight:800;margin-bottom:5px;}
+.pop-sub{font-size:13px;color:var(--muted);margin-bottom:18px;line-height:1.6;}
+.btn-close{background:linear-gradient(135deg,#7C3AED,#EC4899);color:#fff;border:none;border-radius:12px;padding:11px 28px;font-size:14px;font-weight:700;font-family:'Sarabun',sans-serif;cursor:pointer;}
+
+/* LEVEL UP POPUP */
+.lvup-ov{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:1001;opacity:0;pointer-events:none;transition:opacity .3s;padding:16px;}
+.lvup-ov.show{opacity:1;pointer-events:all;}
+.lvup-box{background:linear-gradient(135deg,#1E1B4B,#7C3AED);border-radius:28px;padding:36px 24px;text-align:center;max-width:300px;width:100%;transform:scale(.5) rotate(-10deg);transition:transform .6s cubic-bezier(.175,.885,.32,1.275);color:#fff;}
+.lvup-ov.show .lvup-box{transform:scale(1) rotate(0deg);}
+.lvup-label{font-size:13px;letter-spacing:3px;text-transform:uppercase;opacity:.8;margin-bottom:8px;}
+.lvup-icon{font-size:80px;display:block;margin-bottom:12px;animation:bounce .5s ease infinite alternate;}
+.lvup-name{font-size:28px;font-weight:800;margin-bottom:6px;}
+.lvup-desc{font-size:14px;opacity:.8;margin-bottom:20px;}
+.stars-row{display:flex;justify-content:center;gap:4px;margin-bottom:20px;font-size:22px;}
+
+/* SPIN WHEEL */
+.wheel-ov{position:fixed;inset:0;background:rgba(0,0,0,.8);display:flex;align-items:center;justify-content:center;z-index:1002;opacity:0;pointer-events:none;transition:opacity .3s;padding:16px;}
+.wheel-ov.show{opacity:1;pointer-events:all;}
+.wheel-wrap{background:#1E1B4B;border-radius:28px;padding:24px 20px;text-align:center;max-width:340px;width:100%;transform:translateY(40px);transition:transform .4s cubic-bezier(.175,.885,.32,1.275);}
+.wheel-ov.show .wheel-wrap{transform:translateY(0);}
+.wheel-title{color:#fff;font-size:20px;font-weight:800;margin-bottom:4px;}
+.wheel-sub{color:rgba(255,255,255,.7);font-size:13px;margin-bottom:20px;}
+.wheel-container{position:relative;width:260px;height:260px;margin:0 auto 20px;}
+.wheel-pointer{position:absolute;top:-16px;left:50%;transform:translateX(-50%);width:0;height:0;border-left:14px solid transparent;border-right:14px solid transparent;border-top:28px solid #F59E0B;z-index:10;filter:drop-shadow(0 2px 4px rgba(0,0,0,.5));}
+canvas#wheelCanvas{border-radius:50%;box-shadow:0 0 40px rgba(124,58,237,.5);display:block;}
+.btn-spin{background:linear-gradient(135deg,#F59E0B,#EF4444);color:#fff;border:none;border-radius:14px;padding:14px 40px;font-size:18px;font-weight:800;font-family:'Sarabun',sans-serif;cursor:pointer;transition:transform .15s;box-shadow:0 4px 15px rgba(245,158,11,.4);}
+.btn-spin:active{transform:scale(.97);}
+.btn-spin:disabled{opacity:.5;cursor:not-allowed;}
+.wheel-skip{background:none;border:none;color:rgba(255,255,255,.5);font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;margin-top:10px;display:block;width:100%;}
+
+/* CONFETTI */
+.confetti-c{position:fixed;inset:0;pointer-events:none;z-index:998;overflow:hidden;}
+.cp{position:absolute;animation:cfall linear forwards;}
+
+/* ANIMATIONS */
+@keyframes popIn{0%{transform:scale(.5);opacity:0}100%{transform:scale(1);opacity:1}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes bounce{0%{transform:translateY(0) scale(1)}100%{transform:translateY(-12px) scale(1.1)}}
+@keyframes cfall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes starPulse{0%,100%{transform:scale(1)}50%{transform:scale(1.2)}}
+@keyframes slideIn{from{transform:translateX(100%);opacity:0}to{transform:translateX(0);opacity:1}}
+.floating{animation:float 3s ease-in-out infinite;}
+</style>
+</head>
+<body>
+
+<!-- NAME MODAL -->
+<div class="overlay" id="nameModal">
+  <div class="modal-box">
+    <div style="font-size:60px;margin-bottom:12px;" class="floating">⭐</div>
+    <h2>ยินดีต้อนรับ!</h2>
+    <p>กรอกชื่อของคุณเพื่อเริ่มสะสมดาว<br>และพัฒนาตัวเองทุกวัน ✨</p>
+    <input type="text" class="inp" id="nameInput" placeholder="ชื่อของคุณ..." maxlength="20">
+    <button class="btn" onclick="saveName()">เริ่มเลย! 🚀</button>
+  </div>
+</div>
+
+<!-- LEVEL UP POPUP -->
+<div class="lvup-ov" id="lvupOv">
+  <div class="lvup-box">
+    <div class="lvup-label">⬆ LEVEL UP!</div>
+    <span class="lvup-icon" id="lvupIcon">⭐</span>
+    <div class="lvup-name" id="lvupName">ดาวรุ่ง</div>
+    <div class="lvup-desc" id="lvupDesc">คุณเก่งมากเลย!</div>
+    <div class="stars-row" id="lvupStars"></div>
+    <button class="btn" onclick="closeLvup()">ขอบคุณ! 💪</button>
+  </div>
+</div>
+
+<!-- SPIN WHEEL -->
+<div class="wheel-ov" id="wheelOv">
+  <div class="wheel-wrap">
+    <div class="wheel-title">🎡 หมุนล้อรางวัล!</div>
+    <div class="wheel-sub" id="wheelSub">ยินดีด้วย! คุณทำ Streak 7 วันได้แล้ว!</div>
+    <div class="wheel-container">
+      <div class="wheel-pointer"></div>
+      <canvas id="wheelCanvas" width="260" height="260"></canvas>
+    </div>
+    <button class="btn-spin" id="spinBtn" onclick="spinWheel()">หมุนเลย! 🎯</button>
+    <button class="wheel-skip" onclick="closeWheel()">ข้ามไปก่อน</button>
+  </div>
+</div>
+
+<!-- PRIZE POPUP -->
+<div class="popup-ov" id="prizeOv" onclick="closePrize()">
+  <div class="popup-box" onclick="event.stopPropagation()">
+    <span class="pop-icon" id="prizeIcon">🎁</span>
+    <div class="pop-title" id="prizeTitle">รางวัล!</div>
+    <div class="pop-sub" id="prizeSub">ยินดีด้วย!</div>
+    <button class="btn-close" onclick="closePrize()">รับรางวัล! 🎉</button>
+  </div>
+</div>
+
+<!-- GENERAL POPUP -->
+<div class="popup-ov" id="popupOv" onclick="closePopup()">
+  <div class="popup-box" onclick="event.stopPropagation()">
+    <span class="pop-icon" id="popIcon">🌟</span>
+    <div class="pop-title" id="popTitle">ยอดเยี่ยม!</div>
+    <div class="pop-sub" id="popSub">คุณทำได้แล้ว!</div>
+    <button class="btn-close" onclick="closePopup()">ขอบคุณ! 💖</button>
+  </div>
+</div>
+
+<!-- CONFETTI -->
+<div class="confetti-c" id="confettiC"></div>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="h-name" id="hName">สวัสดี, ...</div>
+  <div class="h-title">⭐ Small Win Tracker</div>
+  <div class="h-date" id="hDate"></div>
+  <div class="h-stats">
+    <div class="stat-pill">🔥 <span id="hStreak">0</span> วัน</div>
+    <div class="stat-pill">⭐ เดือนนี้ <span id="hMonth">0</span></div>
+    <div class="stat-pill" id="hLevelPill">🌱 มือใหม่</div>
+  </div>
+</div>
+
+<!-- TABS -->
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('today')" id="tab-today"><span class="ti">✅</span>วันนี้</button>
+  <button class="tab-btn" onclick="switchTab('book')" id="tab-book"><span class="ti">📖</span>สมุดดาว</button>
+  <button class="tab-btn" onclick="switchTab('rank')" id="tab-rank"><span class="ti">🏆</span>อันดับ</button>
+  <button class="tab-btn" onclick="switchTab('settings')" id="tab-settings"><span class="ti">⚙️</span>ตั้งค่า</button>
+</div>
+
+<!-- CONTENT -->
+<div class="content">
+
+<!-- TAB: TODAY -->
+<div class="tab-pane active" id="pane-today">
+  <div class="quote-card"><div class="qt" id="qtText">💬 ...</div><div class="ql">คำคมประจำวัน</div></div>
+  <div class="streak-card"><div class="sf">🔥</div><div class="si"><h4 id="stText">เริ่มสตรีคได้เลย!</h4><p id="stSub">ทำ Small Win ครบวันนี้</p></div></div>
+  <div class="lv-card" id="lvCard" style="background:#F5F0FF;"><div class="lv-icon" id="lvIcon">🌱</div><div class="lv-info"><h4 id="lvName">มือใหม่</h4><p id="lvDesc">สะสมดาวเพื่อเลื่อนระดับ</p></div></div>
+  <div class="card">
+    <div class="prog-label"><span>ความคืบหน้าวันนี้</span><span class="prog-num"><span id="doneC">0</span>/7 ✅</span></div>
+    <div class="prog-bg"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+  </div>
+  <div class="star-banner" id="starBanner"><div class="big-star">⭐</div><h3>ได้รับดาวประจำวัน!</h3><p>ทำ Small Win ครบทุกข้อแล้ว 🎉</p></div>
+  <div class="sec-title">📋 Small Wins วันนี้</div>
+  <div class="checklist" id="checklist"></div>
+  <div style="margin-top:14px;text-align:center;"><button onclick="resetToday()" style="background:none;border:none;color:var(--muted);font-size:12px;cursor:pointer;font-family:'Sarabun',sans-serif;text-decoration:underline;">รีเซ็ตรายการวันนี้</button></div>
+</div>
+
+<!-- TAB: BOOK -->
+<div class="tab-pane" id="pane-book">
+  <div class="sg">
+    <div class="sb"><div class="sn" id="bTotal">0</div><div class="sl">⭐ ดาวทั้งหมด</div></div>
+    <div class="sb"><div class="sn" id="bStreak">0</div><div class="sl">🔥 Streak สูงสุด</div></div>
+    <div class="sb"><div class="sn" id="bMonth">0</div><div class="sl">📅 เดือนนี้</div></div>
+    <div class="sb"><div class="sn" id="bStickers">0</div><div class="sl">🏷️ สติ๊กเกอร์</div></div>
+  </div>
+  <div class="sec-title">📅 ปฏิทินดาว</div>
+  <div class="month-hdr">
+    <button class="mnav" onclick="changeMonth(-1)">◀</button>
+    <div class="mtitle" id="mTitle"></div>
+    <button class="mnav" onclick="changeMonth(1)">▶</button>
+  </div>
+  <div class="cal-grid" id="calGrid"></div>
+  <div class="sec-title">🏷️ สติ๊กเกอร์รางวัล</div>
+  <p style="font-size:12px;color:var(--muted);margin-bottom:10px;">ทำดาวครบทุกวันในเดือน = สติ๊กเกอร์สุ่มพิเศษ 🎁</p>
+  <div class="sticker-grid" id="stickerGrid"></div>
+</div>
+
+<!-- TAB: RANK -->
+<div class="tab-pane" id="pane-rank">
+  <div class="sync-row">
+    <span class="sync-status" id="rankStatus">กด Refresh เพื่อโหลดอันดับ</span>
+    <button class="btn-sm" onclick="loadLeaderboard()">🔄 Refresh</button>
+  </div>
+  <div class="sec-title">🏆 ตารางคะแนน</div>
+  <div id="lbList"><div class="lb-empty">⚙️ ตั้งค่า Google Sheets URL ก่อนนะ<br><small style="font-size:11px;">ไปที่ Tab ตั้งค่า แล้วใส่ URL</small></div></div>
+</div>
+
+<!-- TAB: SETTINGS -->
+<div class="tab-pane" id="pane-settings">
+  <div class="sec-title">⚙️ ตั้งค่า Google Sheets</div>
+  <div class="card settings-form">
+    <label>Google Apps Script URL</label>
+    <small>วาง URL ที่ได้จากการ Deploy Apps Script ที่นี่</small>
+    <input type="text" class="inp" id="sheetUrl" placeholder="https://script.google.com/macros/s/..." style="margin-top:8px;">
+    <button class="btn" onclick="saveSettings()">💾 บันทึก URL</button>
+    <div id="settingMsg" style="font-size:12px;margin-top:6px;text-align:center;"></div>
+  </div>
+  <div class="card" style="margin-top:4px;">
+    <div class="sec-title" style="margin-bottom:8px;">📤 Sync ข้อมูลของฉัน</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">ส่งข้อมูลของคุณขึ้น Google Sheets เพื่อให้ Admin เห็นในแดชบอร์ด</p>
+    <button class="btn" onclick="syncData()">☁️ Sync ตอนนี้</button>
+    <div id="syncMsg" style="font-size:12px;margin-top:8px;text-align:center;"></div>
+  </div>
+  <div class="card" style="margin-top:4px;">
+    <div class="sec-title" style="margin-bottom:8px;">👤 ข้อมูลของฉัน</div>
+    <p style="font-size:13px;color:var(--muted);margin-bottom:10px;">ชื่อ: <strong id="settingName">-</strong></p>
+    <button onclick="changeName()" class="btn-outline" style="width:100%;">เปลี่ยนชื่อ</button>
+  </div>
+</div>
+
+</div><!-- /content -->
+
+<script>
+// ============================================================
+// CONFIG
+// ============================================================
+const TASKS = [
+  {id:'read',    icon:'📚', label:'อ่านหนังสือ 10 หน้าขึ้นไป',  sub:'เติมความรู้ทุกวัน'},
+  {id:'listen',  icon:'🎧', label:'ฟัง Link',                    sub:'ฟังเพื่อพัฒนาทัศนคติ'},
+  {id:'post',    icon:'📱', label:'Post Social',                  sub:'แชร์เรื่องราวดีๆ'},
+  {id:'addfriend',icon:'👥',label:'Add Friend 20 รายชื่อ',       sub:'ขยายเครือข่าย'},
+  {id:'product', icon:'🛍️', label:'ใช้สินค้า',                   sub:'สัมผัสผลิตภัณฑ์จริง'},
+  {id:'cheer',   icon:'💪', label:'ให้กำลังใจเพื่อนในกลุ่ม',    sub:'ส่งพลังงานบวก'},
+  {id:'share',   icon:'🌟', label:'มีเรื่องดีๆ มาแชร์ Upline',  sub:'แชร์ความสำเร็จวันละ 1 เรื่อง'},
+];
+
+const QUOTES = [
+  'ทุกก้าวเล็กๆ คือชัยชนะที่ยิ่งใหญ่ 🌟',
+  'คนที่ประสบความสำเร็จไม่ใช่คนที่ไม่เคยล้ม แต่คือคนที่ลุกขึ้นทุกครั้ง 💪',
+  'ความสม่ำเสมอชนะความสามารถ เมื่อความสามารถไม่มีความสม่ำเสมอ 🔥',
+  'ทำวันนี้ให้ดี แล้วพรุ่งนี้จะดูแลตัวเอง ⭐',
+  'เริ่มต้นเสมอดีกว่ารอจนสมบูรณ์แบบ 🚀',
+  'ความสุขที่ยิ่งใหญ่มาจากชัยชนะเล็กๆ ทุกวัน 🌈',
+  'คุณไม่ต้องเก่งเพื่อเริ่ม แต่ต้องเริ่มเพื่อเก่ง 💡',
+  'วันนี้คุณดีกว่าเมื่อวาน นั่นคือทุกอย่างที่สำคัญ 🌸',
+  'ความฝันไม่ทำงาน ถ้าคุณไม่ทำ ✨',
+  'ทีมที่แข็งแกร่ง คือทีมที่ทุกคนเติบโตไปพร้อมกัน 🤝',
+  'เมื่อคุณช่วยให้คนอื่นประสบความสำเร็จ คุณก็ประสบความสำเร็จไปด้วย 💝',
+  'ดาวทุกดวงเริ่มต้นจากความมืด แสงสว่างมาจากข้างใน 🌟',
+];
+
+const STICKERS = ['🦄','🌈','🎊','🍀','🎀','💖','🌺','🎯','🏆','💫','🌙','🎁','🦋','🌻','💎','🎸','🍭','🎪','🦊','🐣','🌴','⚡','🎭','🎠'];
+
+const LEVELS = [
+  {min:0,  icon:'🌱', name:'มือใหม่',    color:'#10B981', bg:'#D1FAE5', desc:'เริ่มต้นการเดินทาง'},
+  {min:7,  icon:'🌿', name:'กำลังโต',   color:'#059669', bg:'#A7F3D0', desc:'เติบโตทุกวัน'},
+  {min:14, icon:'🌸', name:'กำลังบาน',  color:'#EC4899', bg:'#FCE7F3', desc:'เริ่มเห็นผล'},
+  {min:21, icon:'⭐', name:'ดาวรุ่ง',   color:'#F59E0B', bg:'#FEF3C7', desc:'ส่องแสงได้แล้ว'},
+  {min:30, icon:'💎', name:'แชมป์เปี้ยน',color:'#7C3AED', bg:'#EDE9FE',desc:'ระดับสูงมาก'},
+  {min:60, icon:'👑', name:'ตำนาน',     color:'#D97706', bg:'#FEF3C7', desc:'แรงบันดาลใจของทีม'},
+];
+
+const WHEEL_PRIZES = [
+  {emoji:'⭐', label:'ดาวโบนัส +1',   color:'#F59E0B', desc:'ได้รับดาวโบนัส 1 ดวงเพิ่มทันที!',             action:'bonus_star'},
+  {emoji:'💬', label:'คำชมพิเศษ',     color:'#7C3AED', desc:'Upline จะชมคุณต่อหน้าทีมในกลุ่ม Line!',       action:'praise'},
+  {emoji:'🎁', label:'สติ๊กเกอร์โบนัส',color:'#EC4899',desc:'ได้รับสติ๊กเกอร์พิเศษเพิ่ม 1 อัน!',           action:'bonus_sticker'},
+  {emoji:'🔥', label:'Streak Shield', color:'#EF4444', desc:'ป้องกันสตรีคหาย 1 ครั้ง เก็บไว้ใช้ได้เลย!',   action:'shield'},
+  {emoji:'📸', label:'โชว์ Story',    color:'#10B981', desc:'คุณจะได้โชว์เรื่องราวความสำเร็จในกลุ่ม!',     action:'story'},
+  {emoji:'🌟', label:'Double Stars',  color:'#3B82F6', desc:'คะแนนดาวของคุณวันนี้นับเป็น 2 เท่า!',         action:'double'},
+  {emoji:'🏅', label:'เข็มกลัดทีม',  color:'#8B5CF6', desc:'Upline จะมอบเข็มกลัดพิเศษในการประชุมครั้งหน้า!',action:'badge'},
+  {emoji:'🎉', label:'Party Time!',   color:'#F97316', desc:'ทั้งทีมจะฉลองความสำเร็จของคุณด้วยกัน!',       action:'party'},
+];
+
+// ============================================================
+// STATE
+// ============================================================
+let S = JSON.parse(localStorage.getItem('sw_v3') || '{}');
+if (!S.name)        S.name = '';
+if (!S.stars)       S.stars = {};
+if (!S.checks)      S.checks = {};
+if (!S.stickers)    S.stickers = [];
+if (!S.bestStreak)  S.bestStreak = 0;
+if (!S.prizes)      S.prizes = [];
+if (!S.shieldCount) S.shieldCount = 0;
+if (!S.spinDone)    S.spinDone = [];
+if (!S.sheetUrl)    S.sheetUrl = 'https://script.google.com/macros/s/AKfycbxoLHLZI7vtHNpqBActvENtKWmkblxJnmOvamf3U7iYRgY0gt8-yCzg9WxdoYgsibMzoQ/exec';
+const save = () => localStorage.setItem('sw_v3', JSON.stringify(S));
+
+let calYear, calMonth;
+let wheelSpun = false;
+let prevLevel = null;
+
+// ============================================================
+// HELPERS
+// ============================================================
+const pad = n => String(n).padStart(2,'0');
+const todayKey = () => { const d=new Date(); return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`; };
+const getChecks = () => { const k=todayKey(); if(!S.checks[k]) S.checks[k]={}; return S.checks[k]; };
+const countDone = () => TASKS.filter(t => getChecks()[t.id]).length;
+
+function getStreak() {
+  let s=0, d=new Date();
+  while(true){
+    const k=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    if(S.stars[k]){s++;d.setDate(d.getDate()-1);}else break;
+  }
+  return s;
+}
+
+function getMonthStars(y,m){
+  const pfx=`${y}-${pad(m+1)}-`;
+  return Object.keys(S.stars).filter(k=>k.startsWith(pfx)&&S.stars[k]).length;
+}
+
+function getTotalStars(){ return Object.keys(S.stars).filter(k=>S.stars[k]).length; }
+
+function getLevel(total){
+  let lv=LEVELS[0];
+  for(const l of LEVELS){ if(total>=l.min) lv=l; else break; }
+  return lv;
+}
+
+// ============================================================
+// INIT
+// ============================================================
+window.onload = () => {
+  if(!S.name){ document.getElementById('nameModal').style.display='flex'; return; }
+  init();
+};
+
+function saveName(){
+  const n = document.getElementById('nameInput').value.trim();
+  if(!n) return;
+  S.name = n; save();
+  document.getElementById('nameModal').style.display='none';
+  init();
+  showPopup('🎉', 'ยินดีต้อนรับ '+n+'!', 'พร้อมสะสมดาวและพัฒนาตัวเองทุกวันแล้ว เริ่มเลย! 🚀');
+}
+
+function init(){
+  prevLevel = getLevel(getTotalStars());
+  updateHeader();
+  renderChecklist();
+  updateProgress(false);
+  renderCalendar();
+  renderStickers();
+  updateBookStats();
+  loadQuote();
+  updateLevelUI();
+  updateStreakUI();
+  checkMonthComplete();
+  document.getElementById('settingName').textContent = S.name;
+  document.getElementById('sheetUrl').value = S.sheetUrl || '';
+  drawWheel();
+}
+
+// ============================================================
+// HEADER
+// ============================================================
+function updateHeader(){
+  document.getElementById('hName').textContent = `สวัสดี, ${S.name} 👋`;
+  const d=new Date(), days=['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  const months=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  document.getElementById('hDate').textContent = `วัน${days[d.getDay()]}ที่ ${d.getDate()} ${months[d.getMonth()]} ${d.getFullYear()+543}`;
+  document.getElementById('hStreak').textContent = getStreak();
+  const now=new Date();
+  document.getElementById('hMonth').textContent = getMonthStars(now.getFullYear(),now.getMonth());
+  const lv = getLevel(getTotalStars());
+  document.getElementById('hLevelPill').textContent = `${lv.icon} ${lv.name}`;
+}
+
+function loadQuote(){ document.getElementById('qtText').textContent = QUOTES[new Date().getDate()%QUOTES.length]; }
+
+// ============================================================
+// LEVEL UI
+// ============================================================
+function updateLevelUI(){
+  const total = getTotalStars();
+  const lv = getLevel(total);
+  document.getElementById('lvIcon').textContent = lv.icon;
+  document.getElementById('lvName').textContent = lv.name;
+  document.getElementById('lvDesc').textContent = lv.desc;
+  document.getElementById('lvCard').style.background = lv.bg;
+}
+
+function checkLevelUp(){
+  const total = getTotalStars();
+  const newLv = getLevel(total);
+  if(prevLevel && newLv.name !== prevLevel.name){
+    prevLevel = newLv;
+    setTimeout(()=>showLevelUp(newLv), 800);
+  }
+}
+
+function showLevelUp(lv){
+  document.getElementById('lvupIcon').textContent = lv.icon;
+  document.getElementById('lvupName').textContent = lv.name;
+  document.getElementById('lvupDesc').textContent = lv.desc;
+  // stars
+  const idx = LEVELS.indexOf(lv);
+  document.getElementById('lvupStars').innerHTML = LEVELS.slice(0,idx+1).map(l=>`<span style="animation:starPulse ${.5+Math.random()*.5}s ease infinite alternate">${l.icon}</span>`).join('');
+  document.getElementById('lvupOv').classList.add('show');
+  launchConfetti(80);
+}
+
+function closeLvup(){ document.getElementById('lvupOv').classList.remove('show'); }
+
+// ============================================================
+// STREAK UI
+// ============================================================
+function updateStreakUI(){
+  const s = getStreak();
+  const el_t = document.getElementById('stText'), el_s = document.getElementById('stSub');
+  if(s===0){ el_t.textContent='เริ่มสตรีคได้เลย!'; el_s.textContent='ทำ Small Win ครบวันนี้เพื่อเริ่มสตรีค 🔥';}
+  else if(s<3){ el_t.textContent=`🔥 สตรีค ${s} วัน — ดีมาก!`; el_s.textContent='รักษาสตรีคต่อไปนะ!';}
+  else if(s<7){ el_t.textContent=`🔥🔥 สตรีค ${s} วัน — ร้อนแรง!`; el_s.textContent='อีกนิดเดียวก็ครบอาทิตย์แล้ว!';}
+  else{ el_t.textContent=`🔥🔥🔥 สตรีค ${s} วัน — สุดยอด!`; el_s.textContent='คุณคือแรงบันดาลใจของทีม! 👑';}
+}
+
+// ============================================================
+// CHECKLIST
+// ============================================================
+function renderChecklist(){
+  const checks=getChecks(), el=document.getElementById('checklist');
+  el.innerHTML='';
+  TASKS.forEach(t=>{
+    const done=!!checks[t.id];
+    const div=document.createElement('div');
+    div.className='ci'+(done?' done':'');
+    div.innerHTML=`<div class="cbox">${done?'✓':''}</div><div class="clabel"><div class="lmain">${t.icon} ${t.label}</div><div class="lsub">${t.sub}</div></div>`;
+    div.addEventListener('click',()=>toggleTask(t.id));
+    el.appendChild(div);
+  });
+}
+
+function toggleTask(id){
+  const c=getChecks(); c[id]=!c[id]; S.checks[todayKey()]=c; save();
+  renderChecklist(); updateProgress(true);
+  if(c[id]) miniConfetti();
+}
+
+// ============================================================
+// PROGRESS & STAR
+// ============================================================
+function updateProgress(animate){
+  const done=countDone();
+  document.getElementById('doneC').textContent=done;
+  document.getElementById('progFill').style.width=(done/7*100)+'%';
+  const key=todayKey(), wasDone=!!S.stars[key];
+
+  if(done===7 && !wasDone){
+    S.stars[key]=true; save();
+    document.getElementById('starBanner').classList.add('show');
+    if(animate){ launchConfetti(60); }
+    updateHeader(); updateLevelUI(); updateStreakUI(); updateBookStats(); renderCalendar();
+    checkLevelUp();
+
+    const streak=getStreak();
+    if(streak>S.bestStreak){ S.bestStreak=streak; save(); }
+
+    // Check spin wheel (every 7-day streak milestone)
+    const spinKey = `streak_${streak}`;
+    if(streak>0 && streak%7===0 && !S.spinDone.includes(spinKey)){
+      S.spinDone.push(spinKey); save();
+      setTimeout(()=>openWheel(`ยินดีด้วย! คุณทำ Streak ${streak} วันติดต่อกันได้แล้ว 🔥`), 1200);
+    } else if(animate){
+      setTimeout(()=>{
+        const msgs=[
+          ['⭐','ได้ดาวแล้ว!','คุณทำ Small Win ครบทุกข้อแล้ววันนี้ 💪'],
+          ['🌟','ดีมากเลย!','ทุกวันที่คุณพยายาม คือก้าวสู่ความสำเร็จ ✨'],
+          ['🎉','ยอดเยี่ยม!','วันนี้คุณเป็นแรงบันดาลใจให้คนรอบข้างด้วยนะ 🌈'],
+        ];
+        const m=msgs[Math.floor(Math.random()*msgs.length)];
+        showPopup(m[0],m[1],m[2]);
+      },600);
+    }
+    // Auto sync
+    if(S.sheetUrl) syncData(true);
+  } else if(done===7 && wasDone){
+    document.getElementById('starBanner').classList.add('show');
+  } else {
+    document.getElementById('starBanner').classList.remove('show');
+  }
+}
+
+function resetToday(){
+  if(!confirm('รีเซ็ตรายการวันนี้ใช่ไหม?')) return;
+  const k=todayKey(); S.checks[k]={}; if(S.stars[k]) delete S.stars[k]; save();
+  renderChecklist(); updateProgress(false); updateHeader(); updateBookStats(); renderCalendar();
+}
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCalendar(){
+  const now=new Date();
+  if(calYear===undefined){ calYear=now.getFullYear(); calMonth=now.getMonth(); }
+  const mth=['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('mTitle').textContent=`${mth[calMonth]} ${calYear+543}`;
+  const grid=document.getElementById('calGrid'); grid.innerHTML='';
+  ['อา','จ','อ','พ','พฤ','ศ','ส'].forEach(d=>{ const el=document.createElement('div'); el.className='cdow'; el.textContent=d; grid.appendChild(el); });
+  const firstDay=new Date(calYear,calMonth,1).getDay();
+  const dim=new Date(calYear,calMonth+1,0).getDate();
+  for(let i=0;i<firstDay;i++){ const e=document.createElement('div'); e.className='cday empty'; grid.appendChild(e); }
+  for(let d=1;d<=dim;d++){
+    const key=`${calYear}-${pad(calMonth+1)}-${pad(d)}`;
+    const isToday=(calYear===now.getFullYear()&&calMonth===now.getMonth()&&d===now.getDate());
+    const starred=!!S.stars[key];
+    const el=document.createElement('div');
+    el.className='cday'+(starred?' starred':'')+(isToday?' today':'');
+    el.innerHTML=starred?`<div class="dstar">⭐</div><div class="dnum">${d}</div>`:`<div class="dnum" style="font-size:12px;">${d}</div>`;
+    grid.appendChild(el);
+  }
+}
+
+function changeMonth(dir){ calMonth+=dir; if(calMonth<0){calMonth=11;calYear--;}if(calMonth>11){calMonth=0;calYear++;} renderCalendar(); }
+
+// ============================================================
+// BOOK STATS & STICKERS
+// ============================================================
+function updateBookStats(){
+  const now=new Date(), total=getTotalStars();
+  document.getElementById('bTotal').textContent=total;
+  document.getElementById('bStreak').textContent=S.bestStreak;
+  document.getElementById('bMonth').textContent=getMonthStars(now.getFullYear(),now.getMonth());
+  document.getElementById('bStickers').textContent=S.stickers.length;
+}
+
+function renderStickers(){
+  const grid=document.getElementById('stickerGrid'); grid.innerHTML='';
+  for(let i=0;i<12;i++){
+    const sl=document.createElement('div');
+    if(i<S.stickers.length){ const s=S.stickers[i]; sl.className='ss earned'; sl.innerHTML=`${s.emoji}<div class="sm">${s.month}</div>`; }
+    else{ sl.className='ss locked'; sl.textContent='?'; }
+    grid.appendChild(sl);
+  }
+}
+
+function checkMonthComplete(){
+  const now=new Date(), y=now.getFullYear(), m=now.getMonth();
+  const dim=new Date(y,m+1,0).getDate(), ms=getMonthStars(y,m);
+  const mthS=['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  const ml=`${mthS[m]}${(y+543).toString().slice(-2)}`;
+  if(ms>=dim && !S.stickers.some(s=>s.month===ml)){
+    const emoji=STICKERS[Math.floor(Math.random()*STICKERS.length)];
+    S.stickers.push({emoji,month:ml}); save();
+    renderStickers(); updateBookStats();
+    setTimeout(()=>{ launchConfetti(100); showPopup(emoji,`สติ๊กเกอร์พิเศษ!`,`ยินดีด้วย! ทำ Small Win ครบทุกวันในเดือน${ml}! ได้รับ ${emoji} 🎊`); },800);
+  }
+}
+
+// ============================================================
+// SPIN WHEEL
+// ============================================================
+function drawWheel(){
+  const canvas=document.getElementById('wheelCanvas');
+  if(!canvas) return;
+  const ctx=canvas.getContext('2d'), cx=130, cy=130, r=120;
+  const n=WHEEL_PRIZES.length, arc=Math.PI*2/n;
+  WHEEL_PRIZES.forEach((p,i)=>{
+    ctx.beginPath(); ctx.moveTo(cx,cy);
+    ctx.arc(cx,cy,r,arc*i-Math.PI/2,arc*(i+1)-Math.PI/2);
+    ctx.closePath(); ctx.fillStyle=p.color; ctx.fill();
+    ctx.strokeStyle='#fff'; ctx.lineWidth=2; ctx.stroke();
+    ctx.save(); ctx.translate(cx,cy);
+    ctx.rotate(arc*i-Math.PI/2+arc/2);
+    ctx.textAlign='right'; ctx.fillStyle='#fff';
+    ctx.font='bold 18px serif'; ctx.fillText(p.emoji, r-8, 6);
+    ctx.font='bold 11px Sarabun,sans-serif'; ctx.fillText(p.label, r-30, 20);
+    ctx.restore();
+  });
+  // Center circle
+  ctx.beginPath(); ctx.arc(cx,cy,24,0,Math.PI*2);
+  ctx.fillStyle='#1E1B4B'; ctx.fill();
+  ctx.strokeStyle='#fff'; ctx.lineWidth=3; ctx.stroke();
+  ctx.fillStyle='#fff'; ctx.font='bold 16px serif';
+  ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🎡',cx,cy);
+}
+
+let wheelAngle=0;
+function openWheel(subtitle){
+  document.getElementById('wheelSub').textContent=subtitle||'ยินดีด้วย! คุณทำ Streak 7 วันได้แล้ว!';
+  document.getElementById('spinBtn').disabled=false;
+  wheelSpun=false;
+  document.getElementById('wheelCanvas').style.transform=`rotate(${wheelAngle}deg)`;
+  document.getElementById('wheelOv').classList.add('show');
+}
+function closeWheel(){ document.getElementById('wheelOv').classList.remove('show'); }
+
+function spinWheel(){
+  if(wheelSpun) return;
+  wheelSpun=true;
+  document.getElementById('spinBtn').disabled=true;
+  const winner=Math.floor(Math.random()*WHEEL_PRIZES.length);
+  const segDeg=360/WHEEL_PRIZES.length;
+  // Pointer is at top (270deg offset). Winner segment center = winner * segDeg + segDeg/2
+  // We want winner segment center to end up at 270deg (top - pointer position)
+  // Target rotation: 270 - (winner * segDeg + segDeg/2) + multiple full spins
+  const spins=5+Math.floor(Math.random()*3);
+  const targetAngle=360*spins+(270-(winner*segDeg+segDeg/2));
+  const finalAngle=wheelAngle+targetAngle;
+  wheelAngle=finalAngle%360;
+  const canvas=document.getElementById('wheelCanvas');
+  canvas.style.transition=`transform 4s cubic-bezier(0.17,0.67,0.12,0.99)`;
+  canvas.style.transform=`rotate(${finalAngle}deg)`;
+  setTimeout(()=>{ canvas.style.transition='none'; showPrize(WHEEL_PRIZES[winner]); closeWheel(); },4200);
+}
+
+function showPrize(p){
+  // Apply prize effect
+  if(p.action==='bonus_star'){
+    const bk=`BONUS-${Date.now()}`;
+    S.stars['bonus_'+bk]=true; save();
+    updateHeader(); updateBookStats(); updateLevelUI();
+    checkLevelUp();
+  } else if(p.action==='bonus_sticker'){
+    const emoji=STICKERS[Math.floor(Math.random()*STICKERS.length)];
+    S.stickers.push({emoji,month:'โบนัส'}); save();
+    renderStickers(); updateBookStats();
+  } else if(p.action==='shield'){
+    S.shieldCount=(S.shieldCount||0)+1; save();
+  }
+  S.prizes.push({emoji:p.emoji,label:p.label,date:todayKey()}); save();
+  launchConfetti(60);
+  document.getElementById('prizeIcon').textContent=p.emoji;
+  document.getElementById('prizeTitle').textContent=`ได้รับ: ${p.label}!`;
+  document.getElementById('prizeSub').textContent=p.desc;
+  document.getElementById('prizeOv').classList.add('show');
+}
+
+function closePrize(){ document.getElementById('prizeOv').classList.remove('show'); }
+
+// ============================================================
+// LEADERBOARD
+// ============================================================
+async function loadLeaderboard(){
+  const url=S.sheetUrl;
+  if(!url){
+    document.getElementById('rankStatus').textContent='⚙️ ยังไม่ได้ตั้งค่า URL';
+    document.getElementById('rankStatus').className='sync-status err';
+    return;
+  }
+  document.getElementById('rankStatus').textContent='⏳ กำลังโหลด...';
+  document.getElementById('rankStatus').className='sync-status';
+  try{
+    const res=await fetch(url);
+    const data=await res.json();
+    renderLeaderboard(data);
+    document.getElementById('rankStatus').textContent='✅ อัปเดตล่าสุด '+new Date().toLocaleTimeString('th-TH');
+    document.getElementById('rankStatus').className='sync-status ok';
+  }catch(e){
+    document.getElementById('rankStatus').textContent='❌ โหลดไม่ได้ ตรวจสอบ URL อีกครั้ง';
+    document.getElementById('rankStatus').className='sync-status err';
+  }
+}
+
+function renderLeaderboard(data){
+  const list=document.getElementById('lbList');
+  if(!data||!data.length){ list.innerHTML='<div class="lb-empty">ยังไม่มีข้อมูล<br><small>DL ต้อง Sync ข้อมูลก่อนนะ</small></div>'; return; }
+  const medals=['🥇','🥈','🥉'];
+  list.innerHTML=data.map((p,i)=>{
+    const isMe=p.name===S.name;
+    return `<div class="lb-row${isMe?' lb-me':''}">
+      <div class="lb-rank">${i<3?medals[i]:`#${i+1}`}</div>
+      <div class="lb-info">
+        <div class="lb-name">${p.levelIcon||'🌱'} ${p.name}${isMe?' <small>(คุณ)</small>':''}</div>
+        <div class="lb-meta">${p.level||'มือใหม่'} · Sync: ${p.lastSync||'-'}</div>
+        <div class="lb-streak">🔥 ${p.currentStreak||0} วัน streak</div>
+      </div>
+      <div class="lb-stars">⭐${p.totalStars||0}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// GOOGLE SHEETS SYNC
+// ============================================================
+async function syncData(silent=false){
+  const url=S.sheetUrl;
+  if(!url){
+    if(!silent){ document.getElementById('syncMsg').textContent='❌ ยังไม่ได้ตั้งค่า URL'; document.getElementById('syncMsg').style.color='#EF4444'; }
+    return;
+  }
+  if(!silent){ document.getElementById('syncMsg').textContent='⏳ กำลัง sync...'; document.getElementById('syncMsg').style.color='';}
+  const now=new Date(), total=getTotalStars();
+  const lv=getLevel(total);
+  // Build recent 30 days
+  const recentDays=[];
+  for(let i=0;i<30;i++){
+    const d=new Date(); d.setDate(d.getDate()-i);
+    const k=`${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())}`;
+    recentDays.push({date:k, starred:!!S.stars[k], checks:S.checks[k]||{}});
+  }
+  const payload={
+    name:S.name, totalStars:total, currentStreak:getStreak(), bestStreak:S.bestStreak,
+    level:lv.name, levelIcon:lv.icon, monthStars:getMonthStars(now.getFullYear(),now.getMonth()),
+    stickersCount:S.stickers.length, recentDays
+  };
+  try{
+    await fetch(url,{method:'POST',body:JSON.stringify(payload)});
+    if(!silent){ document.getElementById('syncMsg').textContent='✅ Sync สำเร็จ!'; document.getElementById('syncMsg').style.color='#10B981'; }
+  }catch(e){
+    if(!silent){ document.getElementById('syncMsg').textContent='❌ Sync ไม่สำเร็จ ตรวจสอบ URL'; document.getElementById('syncMsg').style.color='#EF4444'; }
+  }
+}
+
+function saveSettings(){
+  const url=document.getElementById('sheetUrl').value.trim();
+  S.sheetUrl=url; save();
+  const msg=document.getElementById('settingMsg');
+  msg.textContent='✅ บันทึกแล้ว!'; msg.style.color='#10B981';
+  setTimeout(()=>msg.textContent='',2000);
+}
+
+// ============================================================
+// TABS
+// ============================================================
+function switchTab(tab){
+  document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('.tab-pane').forEach(p=>p.classList.remove('active'));
+  document.getElementById('tab-'+tab).classList.add('active');
+  document.getElementById('pane-'+tab).classList.add('active');
+  if(tab==='book'){ renderCalendar(); renderStickers(); updateBookStats(); }
+  if(tab==='rank'){ loadLeaderboard(); }
+  if(tab==='settings'){ document.getElementById('settingName').textContent=S.name; document.getElementById('sheetUrl').value=S.sheetUrl||''; }
+}
+
+// ============================================================
+// POPUP
+// ============================================================
+function showPopup(icon,title,sub){
+  document.getElementById('popIcon').textContent=icon;
+  document.getElementById('popTitle').textContent=title;
+  document.getElementById('popSub').textContent=sub;
+  document.getElementById('popupOv').classList.add('show');
+}
+function closePopup(){ document.getElementById('popupOv').classList.remove('show'); }
+
+// ============================================================
+// CONFETTI
+// ============================================================
+function launchConfetti(n=60){
+  const c=document.getElementById('confettiC');
+  const colors=['#7C3AED','#EC4899','#F59E0B','#10B981','#3B82F6','#EF4444'];
+  for(let i=0;i<n;i++){
+    const p=document.createElement('div'); p.className='cp';
+    p.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${colors[Math.floor(Math.random()*colors.length)]};width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${1.5+Math.random()*2}s;animation-delay:${Math.random()*.5}s;`;
+    c.appendChild(p); p.addEventListener('animationend',()=>p.remove());
+  }
+}
+function miniConfetti(){ launchConfetti(10); }
+
+// ============================================================
+// NAME CHANGE
+// ============================================================
+function changeName(){
+  const n=prompt('ชื่อใหม่ของคุณ:', S.name);
+  if(n&&n.trim()){ S.name=n.trim(); save(); updateHeader(); document.getElementById('settingName').textContent=S.name; }
+}
+
+document.getElementById('nameInput').addEventListener('keydown',e=>{ if(e.key==='Enter') saveName(); });
+</script>
+</body>
+</html>
